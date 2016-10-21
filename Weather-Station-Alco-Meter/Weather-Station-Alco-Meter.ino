@@ -16,7 +16,7 @@ void weatherLedDisplay(String icon);
 // Alcometer
 int TIME_UNTIL_WARMUP = 100; // Sensor warm up time
 int TIME_UNTIL_RESET = 30;  // Defined reset time to allow the alco sensor return to initial position
-int bacHistory = 7; // seconds until BAC value has been reset
+int bacHistory = 12; // seconds until BAC value has been reset
 unsigned long secs; //For time storage
 unsigned long resetTime; //For time storage
 unsigned long secsCurrent; //For time storage
@@ -29,6 +29,8 @@ int firstTime2 = 0; //0 if haven't been run for the first time, otherwise 1
 int sensor_read; // ADC value
 int sensorReadForCal; // for calculations
 float val = 0; //For BAC display
+int correctionCoef=1.9;  // adjusting the calculated value based on the "field tests"
+
 
 float bac;
 float bac_chart[] =
@@ -71,12 +73,12 @@ int frameCount = 3;
 int currentFrame = 0;
 
 // your network SSID (name)
-char ssid[] = "xxxxxxxxxxxx";
+char ssid[] = "xxxxxxxxxx";
 // your network password
 char pass[] = "xxxxxxxxxxxxxxxx";
 
 // Go to forecast.io and register for an API KEY
-String forecastApiKey = "xxxxxxxxxxxxxxxxxxxxxxxxxxx";
+String forecastApiKey = "xxxxxxxxxxxxxxxxxxxxxxx";
 
 // Coordinates of the place you want
 // weather information for
@@ -119,7 +121,7 @@ void setup() {
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
   Serial.println(ssid);
-  WiFi.mode(WIFI_STA);
+  WiFi.mode(WIFI_STA); //disable esp8266 AP mode so it doesn't appear in the wifi access point list
   WiFi.begin(ssid, pass);
 
   int counter = 0;
@@ -338,7 +340,7 @@ void readAlcohol()
   } else if ( sensor_read > BAC_END ) {
     bac = 999;
   } else {
-    sensorReadForCal = sensor_read * 1.7 - BAC_START;
+    sensorReadForCal = sensor_read * correctionCoef - BAC_START;
     bac = bac_chart[sensorReadForCal];
     Serial.println("BAC");
     Serial.println(bac);
@@ -356,7 +358,7 @@ void readAlcohol()
   display.display();
   alcoLed(val);
 
- if (millis() - bacHistoryTime > bacHistory * 1000){  //reset history every "bacHistoryTime=7" seconds
+ if (millis() - bacHistoryTime > bacHistory * 1000){  //reset history every "bacHistoryTime=12" seconds
   val=0; 
   bacHistoryTime=millis();
  }
